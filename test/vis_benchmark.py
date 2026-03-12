@@ -149,9 +149,12 @@ if __name__ == "__main__":
 
     workspace_dir = os.environ.get("BUILD_WORKSPACE_DIRECTORY", ".")
 
+    report_dir = os.path.join(workspace_dir, "reports")
+    os.makedirs(report_dir, exist_ok=True)
+
     timestamp = datetime.now().strftime("%Y%m%d_%H%M")
 
-    output_filename = os.path.join(workspace_dir, f"LAPJV_Benchmark_Report_{timestamp}.pdf")
+    output_filename = os.path.join(report_dir, f"LAPJV_Benchmark_Report_{timestamp}.pdf")
 
     context, series, big_o_stats = parse_benchmark_data(input_file)
     plot_to_pdf(context, series, big_o_stats, output_filename)

@@ -1,3 +1,7 @@
+# Reports & Data
+reports/*
+results.json
+
 # Virtual environment
 .venv/
 env/

@@ -25,10 +25,6 @@
 template<typename Data> class LAPJV
 {
 public:
-
-  /**
-   *
-   */
     void solve(Matrix<Data> &m);
 
 private:

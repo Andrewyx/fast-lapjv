@@ -8,6 +8,9 @@
 
 #include "lap.h"
 #include <algorithm> // Needed for std::max
+#include <cmath>     // Needed for std::abs
+
+constexpr double EPSILON = 1e-5;
 
 template<typename Data>
 void LAPJV<Data>::solve(Matrix<Data> &m) {
@@ -110,7 +113,7 @@ void LAPJV<Data>::solve(Matrix<Data> &m) {
       }
 
       i0 = colsol[j1];
-      if (umin < usubmin)
+      if (usubmin - umin  > EPSILON)
         v[j1] = v[j1] - (usubmin - umin);
       else
       if (i0 > -1)
@@ -123,7 +126,7 @@ void LAPJV<Data>::solve(Matrix<Data> &m) {
       colsol[j1] = i;
 
       if (i0 > -1)
-        if (umin < usubmin)
+        if (usubmin - umin > EPSILON)
           freeunassigned[--k] = i0;
         else
           freeunassigned[numfree++] = i0;
@@ -152,8 +155,8 @@ void LAPJV<Data>::solve(Matrix<Data> &m) {
         for (k = up; k < dim; k++) {
           j = collist[k];
           h = d[j];
-          if (h <= min) {
-            if (h < min)
+          if (h <= min + EPSILON) {
+            if (h < min - EPSILON)
             {
               up = low;
               min = h;
@@ -181,7 +184,7 @@ void LAPJV<Data>::solve(Matrix<Data> &m) {
           v2 = cost_at(i, j) - v[j] - h;
           if (v2 < d[j]) {
             pred[j] = i;
-            if (v2 == min)
+            if (std::abs(v2 - min) <= EPSILON)
               if (colsol[j] < 0) {
                 endofpath = j;
                 unassignedfound = true;
