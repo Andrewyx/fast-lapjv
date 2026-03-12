@@ -1,0 +1,25 @@
+# Virtual environment
+.venv/
+env/
+venv/
+
+# Idea workspace
+.idea/
+
+# Bazel
+.clwb/
+bazel-bin
+bazel-out
+bazel-LAPJV-Optimizations
+bazel-testlogs
+bazel-bin/
+bazel-out/
+bazel-LAPJV-Optimizations/
+bazel-testlogs/
+MODULE.bazel.lock
+
+# Compile commands
+compile_commands.json
+
+# Macos data storage
+.DS_Store
