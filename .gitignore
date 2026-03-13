@@ -1,5 +1,6 @@
 # Reports & Data
 reports/*
+results/*
 results.json
 perf.data
 flamegraph.svg

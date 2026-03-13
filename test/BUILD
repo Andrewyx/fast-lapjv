@@ -27,6 +27,11 @@ cc_binary(
 
 
 py_binary(
+    name = "compare_benchmarks",
+    srcs = ["compare_benchmarks.py"],
+)
+
+py_binary(
     name = "vis_benchmark",
     srcs = ["vis_benchmark.py"],
     deps = [
