@@ -42,6 +42,8 @@ public:
   inline size_t minsize() { return ((m_rows < m_columns) ? m_rows : m_columns); }
   inline size_t columns() const { return m_columns;}
   inline size_t rows() const { return m_rows;}
+  inline T* data() { return m_matrix; }
+  inline const T* data() const { return m_matrix; }
 
   friend std::ostream& operator<<(std::ostream& os, const Matrix &matrix)
   {

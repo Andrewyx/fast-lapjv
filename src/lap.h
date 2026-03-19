@@ -47,7 +47,7 @@ public:
         int original_cols = m.columns();
         int dim = std::max(original_rows, original_cols);
 
-        Context ctx(dim, original_rows, original_cols);
+        Context ctx(dim, original_rows, original_cols, m.data());
 
         step1_column_reduction(m, ctx);
         step2_reduction_transfer(m, ctx);
@@ -62,6 +62,7 @@ private:
         int dim;
         int original_rows;
         int original_cols;
+        const Data* __restrict__ m_data;
         std::vector<col> row_assignment;
         std::vector<row> col_assignment;
         std::vector<cost> dual_u;
@@ -74,8 +75,8 @@ private:
         cost min_reduced_cost;
         row num_unassigned_rows;
 
-        explicit Context(int d, int r, int c)
-            : dim(d), original_rows(r), original_cols(c),
+        explicit Context(int d, int r, int c, const Data* data_ptr)
+            : dim(d), original_rows(r), original_cols(c), m_data(data_ptr),
               row_assignment(d, 0), col_assignment(d, 0),
               dual_u(d, 0), dual_v(d, 0),
               unassigned_rows(d, 0), path_cols(d, 0),
@@ -88,7 +89,10 @@ private:
 
     static cost cost_at(const Matrix<Data>& m, const Context& ctx, int r, int c)
     {
-        return r < ctx.original_rows && c < ctx.original_cols ? m(r, c) : 0;
+        if (__builtin_expect(r < ctx.original_rows && c < ctx.original_cols, 1)) {
+            return ctx.m_data[r * ctx.original_cols + c];
+        }
+        return 0;
     }
 
 #ifdef DEBUG
