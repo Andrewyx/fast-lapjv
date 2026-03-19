@@ -3,6 +3,7 @@ reports/*
 results/*
 results.json
 perf.data
+perf.data.old
 flamegraph.svg
 
 # Virtual environment

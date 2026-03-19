@@ -29,15 +29,16 @@
 
 typedef int row;
 typedef int col;
-typedef double cost;
 
 template <typename Data>
 class LAPJV
 {
 public:
-    static constexpr double EPSILON = 1e-9;
-    static constexpr double BIG = 1.79769e+308;
-
+    static constexpr Data EPSILON = std::is_integral_v<Data> ?
+                                        static_cast<Data>(0) :
+                                        std::numeric_limits<Data>::epsilon() * static_cast<Data>(100);
+    static constexpr double BIG = std::numeric_limits<Data>::max();
+    typedef Data cost;
     void solve(Matrix<Data>& m)
     {
         // INITIALIZATION

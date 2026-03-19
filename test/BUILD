@@ -13,13 +13,6 @@ cc_test(
 cc_binary(
     name = "lapbench",
     srcs = ["lapbench.cpp"],
-    copts = [
-        "-O3",
-        "-march=native",
-        "-DNDEBUG",
-        "-flto",
-        "-fopenmp-simd",
-    ],
     linkopts = ["-static"],
     linkstatic = True,
     deps = [
