@@ -46,8 +46,25 @@ public:
         int original_rows = m.rows();
         int original_cols = m.columns();
         int dim = std::max(original_rows, original_cols);
+        bool is_square = (original_rows == original_cols);
 
-        Context ctx(dim, original_rows, original_cols, m.data());
+        row_assignment_arena.assign(dim, 0);
+        col_assignment_arena.assign(dim, 0);
+        dual_u_arena.assign(dim, 0);
+        dual_v_arena.assign(dim, 0);
+        unassigned_rows_arena.assign(dim, 0);
+        path_cols_arena.assign(dim, 0);
+        col_match_counts_arena.assign(dim, 0);
+        shortest_path_costs_arena.assign(dim, 0);
+        predecessor_rows_arena.assign(dim, 0);
+        min_rows_arena.assign(dim, 0);
+
+        Context ctx(dim, original_rows, original_cols, is_square, m.data(),
+                    row_assignment_arena.data(), col_assignment_arena.data(),
+                    dual_u_arena.data(), dual_v_arena.data(),
+                    unassigned_rows_arena.data(), path_cols_arena.data(),
+                    col_match_counts_arena.data(), shortest_path_costs_arena.data(),
+                    predecessor_rows_arena.data(), min_rows_arena.data());
 
         step1_column_reduction(m, ctx);
         step2_reduction_transfer(m, ctx);
@@ -57,38 +74,56 @@ public:
     }
 
 private:
+    std::vector<col> row_assignment_arena;
+    std::vector<row> col_assignment_arena;
+    std::vector<cost> dual_u_arena;
+    std::vector<cost> dual_v_arena;
+    std::vector<row> unassigned_rows_arena;
+    std::vector<col> path_cols_arena;
+    std::vector<col> col_match_counts_arena;
+    std::vector<cost> shortest_path_costs_arena;
+    std::vector<row> predecessor_rows_arena;
+    std::vector<row> min_rows_arena;
+
     struct Context
     {
         int dim;
         int original_rows;
         int original_cols;
+        bool is_square;
         const Data* __restrict__ m_data;
-        std::vector<col> row_assignment;
-        std::vector<row> col_assignment;
-        std::vector<cost> dual_u;
-        std::vector<cost> dual_v;
-        std::vector<row> unassigned_rows;
-        std::vector<col> path_cols;
-        std::vector<col> col_match_counts;
-        std::vector<cost> shortest_path_costs;
-        std::vector<row> predecessor_rows;
+        col* __restrict__ row_assignment;
+        row* __restrict__ col_assignment;
+        cost* __restrict__ dual_u;
+        cost* __restrict__ dual_v;
+        row* __restrict__ unassigned_rows;
+        col* __restrict__ path_cols;
+        col* __restrict__ col_match_counts;
+        cost* __restrict__ shortest_path_costs;
+        row* __restrict__ predecessor_rows;
+        row* __restrict__ min_rows;
         cost min_reduced_cost;
         row num_unassigned_rows;
 
-        explicit Context(int d, int r, int c, const Data* data_ptr)
-            : dim(d), original_rows(r), original_cols(c), m_data(data_ptr),
-              row_assignment(d, 0), col_assignment(d, 0),
-              dual_u(d, 0), dual_v(d, 0),
-              unassigned_rows(d, 0), path_cols(d, 0),
-              col_match_counts(d, 0), shortest_path_costs(d, 0),
-              predecessor_rows(d, 0),
+        explicit Context(int d, int r, int c, bool sq, const Data* data_ptr,
+                         col* ra, row* ca, cost* du, cost* dv, row* ur, col* pc,
+                         col* cmc, cost* spc, row* pr, row* mr)
+            : dim(d), original_rows(r), original_cols(c), is_square(sq), m_data(data_ptr),
+              row_assignment(ra), col_assignment(ca),
+              dual_u(du), dual_v(dv),
+              unassigned_rows(ur), path_cols(pc),
+              col_match_counts(cmc), shortest_path_costs(spc),
+              predecessor_rows(pr), min_rows(mr),
               min_reduced_cost(0), num_unassigned_rows(0)
         {
         }
     };
 
-    static cost cost_at(const Matrix<Data>& m, const Context& ctx, int r, int c)
+    static inline cost cost_at(const Matrix<Data>& m, const Context& ctx, int r, int c)
     {
+        if (ctx.is_square) {
+            return ctx.m_data[r * ctx.dim + c];
+        }
         if (r < ctx.original_rows && c < ctx.original_cols) [[likely]] {
             return ctx.m_data[r * ctx.original_cols + c];
         }
@@ -100,9 +135,6 @@ private:
 #endif
     void step1_column_reduction(const Matrix<Data>& m, Context& ctx)
     {
-        // row with the min given a column
-        std::vector<row> min_rows(ctx.dim, 0);
-
         // find mins for columns
 #pragma omp simd
         for (col j = 0; j < ctx.dim; j++)
@@ -119,23 +151,23 @@ private:
                 if (c < ctx.dual_v[j])
                 {
                     ctx.dual_v[j] = c;
-                    min_rows[j] = i;
+                    ctx.min_rows[j] = i;
                 }
             }
         }
-        step1_2_partial_assignment(ctx, min_rows);
+        step1_2_partial_assignment(ctx);
     }
 
 
 #ifdef DEBUG
     __attribute__((noinline))
 #endif
-    void step1_2_partial_assignment(Context& ctx, const std::vector<row>& min_rows)
+    void step1_2_partial_assignment(Context& ctx)
     {
         cost current_min_cost = 0;
         for (col j = ctx.dim; j--;)
         {
-            row min_row = min_rows[j];
+            row min_row = ctx.min_rows[j];
             current_min_cost = ctx.dual_v[j];
 
             // increment and assign
@@ -180,9 +212,13 @@ private:
                 ctx.min_reduced_cost = BIG;
                 for (col j = 0; j < ctx.dim; j++)
                 {
-                    if (j != j1 && cost_at(m, ctx, i, j) - ctx.dual_v[j] < ctx.min_reduced_cost)
+                    if (j != j1)
                     {
-                        ctx.min_reduced_cost = cost_at(m, ctx, i, j) - ctx.dual_v[j];
+                        cost c = cost_at(m, ctx, i, j) - ctx.dual_v[j];
+                        if (c < ctx.min_reduced_cost)
+                        {
+                            ctx.min_reduced_cost = c;
+                        }
                     }
                 }
                 // reduce the price by the diff w the 2nd cheapest to make it harder to change
