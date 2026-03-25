@@ -10,6 +10,9 @@ cc_library(
     srcs = ["lap.cpp"],
     hdrs = ["lap.h"],
     includes = ["."],
-    deps = [":matrix"],
+    deps = [
+        ":matrix",
+        "@highway//:hwy",
+    ],
     visibility = ["//visibility:public"],
 )
