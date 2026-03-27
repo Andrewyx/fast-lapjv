@@ -28,8 +28,6 @@
 
 #include "hwy/highway.h"
 
-/*************** TYPES      *******************/
-
 typedef int row;
 typedef int col;
 

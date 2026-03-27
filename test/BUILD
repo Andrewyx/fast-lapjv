@@ -33,9 +33,3 @@ py_binary(
         requirement("matplotlib"),
     ],
 )
-
-cc_binary(
-    name = "test_hwy",
-    srcs = ["test_hwy.cpp"],
-    deps = ["@highway//:hwy"],
-)
