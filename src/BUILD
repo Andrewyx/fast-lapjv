@@ -20,22 +20,21 @@ cc_library(
     srcs = ["lap.cpp"],
     hdrs = ["lap.h"],
     copts = select({
-        ":opt_mode": [
+        ":dbg_mode": [
+            "-g",
+            "-fopenmp-simd",
+        ],
+        "//conditions:default": [
             "-O3",
             "-march=native",
             "-ffast-math",
             "-fopenmp-simd",
             "-flto",
         ],
-        ":dbg_mode": [
-            "-g",
-            "-fopenmp-simd",
-        ],
-        "//conditions:default": [],
     }),
     linkopts = select({
-        ":opt_mode": ["-flto"],
-        "//conditions:default": [],
+        ":dbg_mode": [],
+        "//conditions:default": ["-flto"],
     }),
     includes = ["."],
     visibility = ["//visibility:public"],

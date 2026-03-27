@@ -46,11 +46,16 @@ int main() {
 ```
 
 ### Optimization Flags
-The library is augmented to automatically use high-performance flags when compiled in optimized mode. Using `-c opt` or `--config=max` will enable:
+By default, the library compiles with maximum optimizations enabled. This includes:
 - `-O3` and `-march=native`
 - `-ffast-math` and `-fopenmp-simd`
 - Link-Time Optimization (`-flto`)
 - SIMD acceleration via [Google Highway](https://github.com/google/highway)
+
+To disable these optimizations and enable debugging features, explicitly use the debug compilation mode:
+```bash
+bazel build -c dbg //your_target
+```
 
 ## Benchmarking
 To run benchmarks and compare results:
