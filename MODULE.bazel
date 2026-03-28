@@ -2,6 +2,12 @@ bazel_dep(name = "googletest", version = "1.14.0.bcr.1")
 bazel_dep(name = "google_benchmark", version = "1.9.5")
 bazel_dep(name = "rules_python", version = "0.40.0")
 
+module(
+    name = "lapjv",
+    version = "head",
+    repo_name = "fast-lapjv",
+)
+
 pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
 pip.parse(
     hub_name = "pip",
