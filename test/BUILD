@@ -13,8 +13,6 @@ cc_test(
 cc_binary(
     name = "lapbench",
     srcs = ["lapbench.cpp"],
-    linkopts = ["-static"],
-    linkstatic = True,
     deps = [
         "//src:lapjv",
         "@google_benchmark//:benchmark",
